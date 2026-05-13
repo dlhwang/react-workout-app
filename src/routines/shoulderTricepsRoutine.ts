@@ -1,0 +1,60 @@
+import type { WorkoutRoutine } from "../features/workout/model/workoutTypes";
+
+export const shoulderTricepsRoutine: WorkoutRoutine = {
+  id: "shoulder-triceps",
+  name: "어깨 + 삼두 루틴",
+  description: "OHP 중심의 어깨 힘 운동과 삼두 보조 운동을 함께 수행하는 루틴",
+  category: "shoulder",
+  difficulty: "intermediate",
+  estimatedMinutes: 60,
+  exercises: [
+    {
+      id: "barbell-ohp",
+      name: "Barbell OHP",
+      sets: 4,
+      reps: "3~6",
+      restSeconds: 150,
+      memo: "메인 리프트. 허리 과신전 주의.",
+    },
+    {
+      id: "seated-db-shoulder-press",
+      name: "Seated DB Shoulder Press",
+      sets: 3,
+      reps: "8~12",
+      restSeconds: 120,
+      memo: "내릴 때 2~3초 컨트롤.",
+    },
+    {
+      id: "lateral-raise",
+      name: "Lateral Raise",
+      sets: 4,
+      reps: "12~20",
+      restSeconds: 60,
+      memo: "반동 최소화. 측면삼각근 집중.",
+    },
+    {
+      id: "rear-delt-fly",
+      name: "Rear Delt Fly",
+      sets: 3,
+      reps: "12~20",
+      restSeconds: 60,
+      memo: "후면삼각근 자극.",
+    },
+    {
+      id: "lying-triceps-extension",
+      name: "Lying Triceps Extension",
+      sets: 3,
+      reps: "10~15",
+      restSeconds: 90,
+      memo: "팔꿈치 부담 주의. 무리한 고중량 금지.",
+    },
+    {
+      id: "rope-pushdown",
+      name: "Rope Pushdown",
+      sets: 3,
+      reps: "12~20",
+      restSeconds: 60,
+      memo: "삼두 마무리 펌핑.",
+    },
+  ],
+};
