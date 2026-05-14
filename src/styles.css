@@ -42,6 +42,18 @@ button {
   margin-bottom: 20px;
 }
 
+.header-actions {
+  display: grid;
+  gap: 8px;
+}
+
+.session-time {
+  margin: 10px 0 0;
+  color: #dbe7f5;
+  font-size: 18px;
+  font-weight: 850;
+}
+
 .page-header h1,
 .session-header h1,
 .summary-panel h1 {
@@ -260,6 +272,34 @@ dd,
   margin-top: 14px;
 }
 
+.timer-block {
+  margin-top: 14px;
+  padding: 16px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.06);
+  text-align: left;
+}
+
+.timer-block span {
+  display: block;
+  color: #94a3b8;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.timer-block strong {
+  display: block;
+  margin-top: 6px;
+  color: #f8fafc;
+  font-size: 36px;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.timer-block--compact strong {
+  font-size: 30px;
+}
+
 .memo {
   margin: 14px 0 0;
   padding: 14px;
@@ -300,12 +340,62 @@ dd,
   line-height: 0.98;
 }
 
+.timer-caption {
+  margin: -8px 0 0;
+  color: #aebdd0;
+  font-size: 18px;
+  font-weight: 850;
+}
+
 .rest-actions,
 .summary-actions {
   display: grid;
   grid-template-columns: 1fr;
   gap: 10px;
   margin-top: 16px;
+}
+
+.summary-section {
+  margin-top: 18px;
+}
+
+.summary-section h2 {
+  margin: 0 0 10px;
+  font-size: 18px;
+  letter-spacing: 0;
+}
+
+.summary-list {
+  display: grid;
+  gap: 8px;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.summary-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border-radius: 8px;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.summary-list span {
+  color: #dbe7f5;
+  font-weight: 750;
+}
+
+.summary-list strong {
+  flex: 0 0 auto;
+  font-variant-numeric: tabular-nums;
+}
+
+.summary-list--sets {
+  max-height: 260px;
+  overflow: auto;
 }
 
 .summary-shell {

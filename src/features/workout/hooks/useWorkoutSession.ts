@@ -1,157 +1,225 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import type { WorkoutRoutine, WorkoutSession, WorkoutSessionStatus } from "../model/workoutTypes";
-import { getCurrentExercise, getTotalSets } from "../model/workoutSessionUtils";
+import { useNow } from "./useNow";
+import {
+  getCurrentRestRemainingSeconds,
+  getCurrentExercise,
+} from "../model/workoutSessionCalculations";
+import {
+  completeCurrentSetTransition,
+  completeSessionTransition,
+  createInitialSession,
+  pauseSessionTransition,
+  resumeSessionTransition,
+  startNextSetTransition,
+  startRestAfterSet,
+} from "../model/workoutSessionTransition";
+import type { PrimaryAction, WorkoutRoutine, WorkoutSession } from "../model/workoutTypes";
 import { workoutSessionStorage } from "../storage/workoutSessionStorage";
 
-export function useWorkoutSession(initialRoutine: WorkoutRoutine | null) {
+function getNowIso() {
+  return new Date().toISOString();
+}
+
+function canRecoverSession(session: WorkoutSession) {
+  const hasValidCompletedSets = session.completedSets.every(
+    (set) => set.startedAt && set.completedAt && typeof set.durationSeconds === "number",
+  );
+
+  if (!hasValidCompletedSets) {
+    return false;
+  }
+
+  if (session.status === "exercising") {
+    return Boolean(session.startedAt && session.currentSetStartedAt);
+  }
+
+  if (session.status === "resting") {
+    return Boolean(session.startedAt && session.currentRestStartedAt);
+  }
+
+  return session.status === "paused" && Boolean(session.startedAt && session.pausedAt);
+}
+
+export function useWorkoutSession(routine: WorkoutRoutine | null) {
+  const now = useNow(1000);
   const [session, setSession] = useState<WorkoutSession | null>(() => {
     const storedSession = workoutSessionStorage.getActiveSession();
 
-    if (!storedSession || storedSession.status === "completed") {
+    if (!storedSession || storedSession.status === "completed" || !canRecoverSession(storedSession)) {
+      workoutSessionStorage.clearActiveSession();
       return null;
     }
 
-    return storedSession;
+    return {
+      ...storedSession,
+      totalPausedSeconds: storedSession.totalPausedSeconds ?? 0,
+    };
   });
 
-  useEffect(() => {
-    if (!session || session.status === "completed") {
+  const persistSession = useCallback((nextSession: WorkoutSession | null) => {
+    setSession(nextSession);
+
+    if (!nextSession || nextSession.status === "completed") {
       workoutSessionStorage.clearActiveSession();
       return;
     }
 
-    workoutSessionStorage.setActiveSession(session);
-  }, [session]);
-
-  const start = useCallback((routine: WorkoutRoutine) => {
-    const nextSession: WorkoutSession = {
-      routineId: routine.id,
-      routineName: routine.name,
-      currentExerciseIndex: 0,
-      currentSet: 1,
-      status: "exercising",
-      completedSets: [],
-      startedAt: new Date().toISOString(),
-    };
-
-    workoutSessionStorage.setLastRoutineId(routine.id);
-    setSession(nextSession);
+    workoutSessionStorage.setActiveSession(nextSession);
   }, []);
 
-  const reset = useCallback(() => {
-    setSession(null);
-  }, []);
+  const startSession = useCallback((nextRoutine = routine) => {
+    if (!nextRoutine) {
+      return;
+    }
 
-  const finishSession = useCallback((nextSession: WorkoutSession) => {
-    const completedSession = {
-      ...nextSession,
-      status: "completed" as WorkoutSessionStatus,
-      completedAt: new Date().toISOString(),
-    };
+    const nextSession = createInitialSession(nextRoutine, getNowIso());
+    workoutSessionStorage.setLastRoutineId(nextRoutine.id);
+    persistSession(nextSession);
+  }, [persistSession, routine]);
 
+  const completeSession = useCallback((baseSession = session) => {
+    if (!baseSession) {
+      return;
+    }
+
+    const completedSession = completeSessionTransition(baseSession, getNowIso());
     workoutSessionStorage.addCompletion({
       routineId: completedSession.routineId,
       routineName: completedSession.routineName,
       completedSets: completedSession.completedSets,
-      startedAt: completedSession.startedAt,
-      completedAt: completedSession.completedAt,
+      startedAt: completedSession.startedAt ?? completedSession.completedAt ?? getNowIso(),
+      completedAt: completedSession.completedAt ?? getNowIso(),
     });
-    workoutSessionStorage.clearActiveSession();
-    setSession(completedSession);
-  }, []);
+    persistSession(completedSession);
+  }, [persistSession, session]);
 
-  const completeSet = useCallback((routine = initialRoutine) => {
+  const completeCurrentSet = useCallback(() => {
     if (!routine || !session || session.status !== "exercising") {
       return;
     }
 
-    const currentExercise = getCurrentExercise(routine, session);
-    const completedSets = [
-      ...session.completedSets,
-      {
-        exerciseId: currentExercise.id,
-        exerciseName: currentExercise.name,
-        setNumber: session.currentSet,
-        completedAt: new Date().toISOString(),
-      },
-    ];
-    const nextSession = {
-      ...session,
-      completedSets,
-    };
+    const nowIso = getNowIso();
+    const transition = completeCurrentSetTransition(session, routine, nowIso);
 
-    if (completedSets.length >= getTotalSets(routine)) {
-      finishSession(nextSession);
+    if (transition.isSessionCompleted) {
+      completeSession(transition.session);
       return;
     }
 
-    setSession({
-      ...nextSession,
-      status: "resting",
-    });
-  }, [finishSession, initialRoutine, session]);
+    persistSession(startRestAfterSet(transition.session, transition.completedSet, nowIso));
+  }, [completeSession, persistSession, routine, session]);
 
-  const advanceAfterRest = useCallback((routine = initialRoutine) => {
+  const startNextSet = useCallback(() => {
     if (!routine || !session || session.status !== "resting") {
       return;
     }
 
-    const currentExercise = getCurrentExercise(routine, session);
+    persistSession(startNextSetTransition(session, routine, getNowIso()));
+  }, [persistSession, routine, session]);
 
-    if (session.currentSet < currentExercise.sets) {
-      setSession({
-        ...session,
-        currentSet: session.currentSet + 1,
-        status: "exercising",
-      });
+  const skipRestAndStartNextSet = useCallback(() => {
+    startNextSet();
+  }, [startNextSet]);
+
+  const pauseSession = useCallback(() => {
+    if (!session) {
       return;
     }
 
-    setSession({
-      ...session,
-      currentExerciseIndex: session.currentExerciseIndex + 1,
-      currentSet: 1,
-      status: "exercising",
-    });
-  }, [initialRoutine, session]);
+    persistSession(pauseSessionTransition(session, getNowIso()));
+  }, [persistSession, session]);
 
-  const pauseRest = useCallback(() => {
-    setSession((currentSession) =>
-      currentSession?.status === "resting"
-        ? { ...currentSession, status: "paused" }
-        : currentSession,
-    );
-  }, []);
+  const resumeSession = useCallback(() => {
+    if (!session) {
+      return;
+    }
 
-  const resumeRest = useCallback(() => {
-    setSession((currentSession) =>
-      currentSession?.status === "paused"
-        ? { ...currentSession, status: "resting" }
-        : currentSession,
-    );
-  }, []);
+    persistSession(resumeSessionTransition(session, getNowIso()));
+  }, [persistSession, session]);
 
-  const endWorkout = useCallback(() => {
-    setSession(null);
-  }, []);
+  const restartSession = useCallback(() => {
+    startSession(routine);
+  }, [routine, startSession]);
+
+  const reset = useCallback(() => {
+    persistSession(null);
+  }, [persistSession]);
+
+  useEffect(() => {
+    if (!routine || !session || session.status !== "resting") {
+      return;
+    }
+
+    if (getCurrentRestRemainingSeconds(session, routine, now) <= 0) {
+      startNextSet();
+    }
+  }, [now, routine, session, startNextSet]);
 
   const currentExercise = useMemo(() => {
-    if (!session || !initialRoutine) {
+    if (!session || !routine) {
       return null;
     }
 
-    return getCurrentExercise(initialRoutine, session);
-  }, [initialRoutine, session]);
+    return getCurrentExercise(routine, session);
+  }, [routine, session]);
+
+  const primaryAction: PrimaryAction = useMemo(() => {
+    if (!session) {
+      return {
+        label: "운동 시작",
+        action: () => startSession(routine),
+      };
+    }
+
+    if (session.status === "exercising") {
+      return {
+        label: "세트 종료",
+        action: completeCurrentSet,
+      };
+    }
+
+    if (session.status === "resting") {
+      return {
+        label: "다음 세트 시작",
+        action: skipRestAndStartNextSet,
+      };
+    }
+
+    if (session.status === "paused") {
+      return {
+        label: "다시 시작",
+        action: resumeSession,
+      };
+    }
+
+    return {
+      label: "다시 하기",
+      action: restartSession,
+    };
+  }, [
+    completeCurrentSet,
+    restartSession,
+    resumeSession,
+    routine,
+    session,
+    skipRestAndStartNextSet,
+    startSession,
+  ]);
 
   return {
+    now,
     session,
     currentExercise,
-    start,
+    primaryAction,
+    startSession,
+    completeCurrentSet,
+    startRestAfterSet,
+    startNextSet,
+    skipRestAndStartNextSet,
+    pauseSession,
+    resumeSession,
+    completeSession,
+    restartSession,
     reset,
-    completeSet,
-    advanceAfterRest,
-    pauseRest,
-    resumeRest,
-    endWorkout,
   };
 }

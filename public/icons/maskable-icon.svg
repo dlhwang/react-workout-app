@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Workout Runner">
+  <rect width="512" height="512" fill="#0d1117"/>
+  <circle cx="256" cy="256" r="208" fill="#172033"/>
+  <rect x="86" y="222" width="340" height="68" rx="34" fill="#83f7c1"/>
+  <rect x="40" y="188" width="72" height="136" rx="30" fill="#69a7ff"/>
+  <rect x="400" y="188" width="72" height="136" rx="30" fill="#69a7ff"/>
+  <rect x="146" y="172" width="50" height="168" rx="24" fill="#f8fafc"/>
+  <rect x="316" y="172" width="50" height="168" rx="24" fill="#f8fafc"/>
+</svg>

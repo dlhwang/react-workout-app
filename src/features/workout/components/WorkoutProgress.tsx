@@ -1,4 +1,8 @@
-import { getSessionProgress, getTotalSets } from "../model/workoutSessionUtils";
+import {
+  getCompletedSetCount,
+  getTotalSetCount,
+  getWorkoutProgressPercent,
+} from "../model/workoutSessionCalculations";
 import type { WorkoutRoutine, WorkoutSession } from "../model/workoutTypes";
 
 type WorkoutProgressProps = {
@@ -7,8 +11,9 @@ type WorkoutProgressProps = {
 };
 
 export function WorkoutProgress({ routine, session }: WorkoutProgressProps) {
-  const progress = getSessionProgress(routine, session);
-  const totalSets = getTotalSets(routine);
+  const progress = getWorkoutProgressPercent(session, routine);
+  const completedSets = getCompletedSetCount(session);
+  const totalSets = getTotalSetCount(routine);
 
   return (
     <section className="progress-panel" aria-label="운동 진행률">
@@ -20,7 +25,7 @@ export function WorkoutProgress({ routine, session }: WorkoutProgressProps) {
         <div className="progress-fill" style={{ width: `${progress}%` }} />
       </div>
       <p>
-        {session.completedSets.length} / {totalSets}세트 완료
+        {completedSets} / {totalSets} 세트 완료
       </p>
     </section>
   );

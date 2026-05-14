@@ -1,23 +1,15 @@
-import {
-  getCurrentExercise,
-  getNextExerciseName,
-  getTotalSets,
-} from "../model/workoutSessionUtils";
-import type { WorkoutRoutine, WorkoutSession } from "../model/workoutTypes";
+import { getCurrentSetElapsedSeconds } from "../model/workoutSessionCalculations";
+import type { Exercise, WorkoutSession } from "../model/workoutTypes";
+import { formatTimer } from "../../../shared/utils/timeFormat";
 
 type CurrentExercisePanelProps = {
-  routine: WorkoutRoutine;
+  exercise: Exercise;
   session: WorkoutSession;
-  onCompleteSet: (routine: WorkoutRoutine) => void;
+  now: Date;
 };
 
-export function CurrentExercisePanel({
-  routine,
-  session,
-  onCompleteSet,
-}: CurrentExercisePanelProps) {
-  const exercise = getCurrentExercise(routine, session);
-  const totalSets = getTotalSets(routine);
+export function CurrentExercisePanel({ exercise, session, now }: CurrentExercisePanelProps) {
+  const currentSetElapsed = getCurrentSetElapsedSeconds(session, now);
 
   return (
     <section className="exercise-panel">
@@ -28,35 +20,27 @@ export function CurrentExercisePanel({
           <strong>
             {session.currentSet} / {exercise.sets}
           </strong>
-          <span>현재 운동 세트</span>
+          <span>세트</span>
         </div>
+      </div>
+
+      <div className="timer-block">
+        <span>현재 세트 시간</span>
+        <strong>{formatTimer(currentSetElapsed)}</strong>
       </div>
 
       <div className="info-grid">
         <div>
           <span>목표 반복</span>
-          <strong>{exercise.reps}</strong>
+          <strong>{exercise.reps}회</strong>
         </div>
         <div>
-          <span>완료 세트</span>
-          <strong>
-            {session.completedSets.length} / {totalSets}
-          </strong>
+          <span>예정 휴식</span>
+          <strong>{formatTimer(exercise.restSeconds)}</strong>
         </div>
       </div>
 
       {exercise.memo ? <p className="memo">{exercise.memo}</p> : null}
-
-      <div className="next-block">
-        <span>다음 운동</span>
-        <strong>{getNextExerciseName(routine, session)}</strong>
-      </div>
-
-      <div className="bottom-action">
-        <button className="primary-button primary-button--large" type="button" onClick={() => onCompleteSet(routine)}>
-          세트 완료
-        </button>
-      </div>
     </section>
   );
 }

@@ -4,16 +4,16 @@ import { WorkoutSessionPage } from "../features/workout/components/WorkoutSessio
 import { WorkoutSummaryPage } from "../features/workout/components/WorkoutSummaryPage";
 import { useWorkoutSession } from "../features/workout/hooks/useWorkoutSession";
 import type { WorkoutRoutine } from "../features/workout/model/workoutTypes";
-import { workoutRoutines } from "../routines";
 import { workoutSessionStorage } from "../features/workout/storage/workoutSessionStorage";
+import { workoutRoutines } from "../routines";
 
 export function App() {
   const [selectedRoutine, setSelectedRoutine] = useState<WorkoutRoutine | null>(() => {
-    const lastRoutineId = workoutSessionStorage.getLastRoutineId();
+    const storedSessionRoutineId = workoutSessionStorage.getActiveSession()?.routineId;
+    const lastRoutineId = storedSessionRoutineId ?? workoutSessionStorage.getLastRoutineId();
+
     return workoutRoutines.find((routine) => routine.id === lastRoutineId) ?? null;
   });
-
-  const runner = useWorkoutSession(selectedRoutine);
 
   const activeRoutine = useMemo(() => {
     if (selectedRoutine) {
@@ -24,9 +24,11 @@ export function App() {
     return workoutRoutines.find((routine) => routine.id === storedRoutineId) ?? null;
   }, [selectedRoutine]);
 
+  const runner = useWorkoutSession(activeRoutine);
+
   const handleStartRoutine = (routine: WorkoutRoutine) => {
     setSelectedRoutine(routine);
-    runner.start(routine);
+    runner.startSession(routine);
   };
 
   const handleBackToList = () => {
@@ -35,10 +37,7 @@ export function App() {
   };
 
   const handleRestart = () => {
-    if (activeRoutine) {
-      setSelectedRoutine(activeRoutine);
-      runner.start(activeRoutine);
-    }
+    runner.restartSession();
   };
 
   if (runner.session?.status === "completed" && activeRoutine) {

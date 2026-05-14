@@ -34,11 +34,19 @@ export type WorkoutSessionStatus =
   | "paused"
   | "completed";
 
+export type ActiveWorkoutSessionStatus = Exclude<WorkoutSessionStatus, "idle" | "completed">;
+
 export type CompletedSet = {
   exerciseId: string;
   exerciseName: string;
   setNumber: number;
+  startedAt: string;
   completedAt: string;
+  durationSeconds: number;
+  plannedRestSeconds: number;
+  actualRestSeconds?: number;
+  restStartedAt?: string;
+  restCompletedAt?: string;
 };
 
 export type WorkoutSession = {
@@ -47,7 +55,17 @@ export type WorkoutSession = {
   currentExerciseIndex: number;
   currentSet: number;
   status: WorkoutSessionStatus;
-  completedSets: CompletedSet[];
-  startedAt: string;
+  startedAt?: string;
   completedAt?: string;
+  currentSetStartedAt?: string;
+  currentRestStartedAt?: string;
+  completedSets: CompletedSet[];
+  pausedAt?: string;
+  statusBeforePause?: ActiveWorkoutSessionStatus;
+  totalPausedSeconds: number;
+};
+
+export type PrimaryAction = {
+  label: string;
+  action: () => void;
 };
