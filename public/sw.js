@@ -1,7 +1,5 @@
-const CACHE_NAME = "workout-runner-v1";
+const CACHE_NAME = "workout-runner-v2";
 const APP_SHELL = [
-  "/",
-  "/index.html",
   "/manifest.webmanifest",
   "/icons/icon.svg",
   "/icons/maskable-icon.svg",
@@ -35,6 +33,21 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
+  if (event.request.mode === "navigate") {
+    event.respondWith(
+      fetch(event.request)
+        .then((response) => {
+          const responseClone = response.clone();
+          caches.open(CACHE_NAME).then((cache) => {
+            cache.put("/index.html", responseClone);
+          });
+          return response;
+        })
+        .catch(() => caches.match("/index.html"))
+    );
+    return;
+  }
+
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {
       if (cachedResponse) {
@@ -43,13 +56,17 @@ self.addEventListener("fetch", (event) => {
 
       return fetch(event.request)
         .then((response) => {
+          if (!response || response.status !== 200) {
+            return response;
+          }
+
           const responseClone = response.clone();
           caches.open(CACHE_NAME).then((cache) => {
             cache.put(event.request, responseClone);
           });
           return response;
         })
-        .catch(() => caches.match("/index.html"));
+        .catch(() => caches.match(event.request));
     })
   );
 });
