@@ -1,3 +1,5 @@
+import type { WorkoutSettings } from "../settings/workoutSettings";
+
 export type WorkoutCategory =
   | "shoulder"
   | "push"
@@ -52,6 +54,7 @@ export type CompletedSet = {
 export type WorkoutSession = {
   routineId: string;
   routineName: string;
+  settingsSnapshot: WorkoutSettings;
   currentExerciseIndex: number;
   currentSet: number;
   status: WorkoutSessionStatus;

@@ -1,4 +1,4 @@
-import { getTotalSets } from "../model/workoutSessionUtils";
+import { getTotalSetCount } from "../model/workoutSessionCalculations";
 import type { WorkoutRoutine } from "../model/workoutTypes";
 
 type RoutineCardProps = {
@@ -28,18 +28,17 @@ export function RoutineCard({ routine, isLastSelected, onStart }: RoutineCardPro
           <dd>{routine.estimatedMinutes ? `${routine.estimatedMinutes}분` : "-"}</dd>
         </div>
         <div>
-          <dt>운동 수</dt>
+          <dt>운동 개수</dt>
           <dd>{routine.exercises.length}개</dd>
         </div>
         <div>
           <dt>총 세트</dt>
-          <dd>{getTotalSets(routine)}세트</dd>
+          <dd>{getTotalSetCount(routine)}세트</dd>
         </div>
       </dl>
 
-      {routine.category ? <p className="category">카테고리: {routine.category}</p> : null}
       <button className="primary-button" type="button" onClick={onStart}>
-        운동 시작
+        시작
       </button>
     </article>
   );

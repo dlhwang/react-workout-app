@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNow } from "./useNow";
 import {
-  getCurrentRestRemainingSeconds,
   getCurrentExercise,
+  getCurrentRestRemainingSeconds,
 } from "../model/workoutSessionCalculations";
 import {
   completeCurrentSetTransition,
@@ -14,6 +14,7 @@ import {
   startRestAfterSet,
 } from "../model/workoutSessionTransition";
 import type { PrimaryAction, WorkoutRoutine, WorkoutSession } from "../model/workoutTypes";
+import type { WorkoutSettings } from "../settings/workoutSettings";
 import { workoutSessionStorage } from "../storage/workoutSessionStorage";
 
 function getNowIso() {
@@ -21,11 +22,13 @@ function getNowIso() {
 }
 
 function canRecoverSession(session: WorkoutSession) {
+  const hasSettingsSnapshot =
+    typeof session.settingsSnapshot?.globalRestSeconds === "number";
   const hasValidCompletedSets = session.completedSets.every(
     (set) => set.startedAt && set.completedAt && typeof set.durationSeconds === "number",
   );
 
-  if (!hasValidCompletedSets) {
+  if (!hasSettingsSnapshot || !hasValidCompletedSets) {
     return false;
   }
 
@@ -67,28 +70,28 @@ export function useWorkoutSession(routine: WorkoutRoutine | null) {
     workoutSessionStorage.setActiveSession(nextSession);
   }, []);
 
-  const startSession = useCallback((nextRoutine = routine) => {
-    if (!nextRoutine) {
-      return;
-    }
-
-    const nextSession = createInitialSession(nextRoutine, getNowIso());
+  const startSession = useCallback((
+    nextRoutine: WorkoutRoutine,
+    settingsSnapshot: WorkoutSettings,
+  ) => {
+    const nextSession = createInitialSession(nextRoutine, settingsSnapshot, getNowIso());
     workoutSessionStorage.setLastRoutineId(nextRoutine.id);
     persistSession(nextSession);
-  }, [persistSession, routine]);
+  }, [persistSession]);
 
   const completeSession = useCallback((baseSession = session) => {
     if (!baseSession) {
       return;
     }
 
-    const completedSession = completeSessionTransition(baseSession, getNowIso());
+    const nowIso = getNowIso();
+    const completedSession = completeSessionTransition(baseSession, nowIso);
     workoutSessionStorage.addCompletion({
       routineId: completedSession.routineId,
       routineName: completedSession.routineName,
       completedSets: completedSession.completedSets,
-      startedAt: completedSession.startedAt ?? completedSession.completedAt ?? getNowIso(),
-      completedAt: completedSession.completedAt ?? getNowIso(),
+      startedAt: completedSession.startedAt ?? completedSession.completedAt ?? nowIso,
+      completedAt: completedSession.completedAt ?? nowIso,
     });
     persistSession(completedSession);
   }, [persistSession, session]);
@@ -137,8 +140,12 @@ export function useWorkoutSession(routine: WorkoutRoutine | null) {
     persistSession(resumeSessionTransition(session, getNowIso()));
   }, [persistSession, session]);
 
-  const restartSession = useCallback(() => {
-    startSession(routine);
+  const restartSession = useCallback((settingsSnapshot: WorkoutSettings) => {
+    if (!routine) {
+      return;
+    }
+
+    startSession(routine, settingsSnapshot);
   }, [routine, startSession]);
 
   const reset = useCallback(() => {
@@ -167,7 +174,7 @@ export function useWorkoutSession(routine: WorkoutRoutine | null) {
     if (!session) {
       return {
         label: "운동 시작",
-        action: () => startSession(routine),
+        action: () => undefined,
       };
     }
 
@@ -194,17 +201,9 @@ export function useWorkoutSession(routine: WorkoutRoutine | null) {
 
     return {
       label: "다시 하기",
-      action: restartSession,
+      action: () => undefined,
     };
-  }, [
-    completeCurrentSet,
-    restartSession,
-    resumeSession,
-    routine,
-    session,
-    skipRestAndStartNextSet,
-    startSession,
-  ]);
+  }, [completeCurrentSet, resumeSession, session, skipRestAndStartNextSet]);
 
   return {
     now,

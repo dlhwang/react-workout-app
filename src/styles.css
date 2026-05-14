@@ -54,6 +54,13 @@ button {
   font-weight: 850;
 }
 
+.session-rest {
+  margin: 6px 0 0;
+  color: #94a3b8;
+  font-size: 14px;
+  font-weight: 800;
+}
+
 .page-header h1,
 .session-header h1,
 .summary-panel h1 {
@@ -407,6 +414,65 @@ dd,
   width: 100%;
 }
 
+.settings-shell {
+  display: grid;
+  align-content: start;
+}
+
+.settings-panel {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 18px;
+  background: rgba(17, 24, 39, 0.92);
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.28);
+}
+
+.settings-field span {
+  display: block;
+  margin-bottom: 10px;
+  color: #f8fafc;
+  font-size: 18px;
+  font-weight: 850;
+}
+
+.settings-input-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 12px;
+}
+
+.settings-input-row input {
+  width: 100%;
+  min-height: 62px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 8px;
+  padding: 0 16px;
+  color: #f8fafc;
+  background: rgba(255, 255, 255, 0.06);
+  font: inherit;
+  font-size: 24px;
+  font-weight: 850;
+}
+
+.settings-input-row strong {
+  color: #dbe7f5;
+  font-size: 20px;
+}
+
+.settings-help {
+  margin: 12px 0 0;
+  color: #94a3b8;
+  line-height: 1.5;
+}
+
+.settings-actions {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+  margin-top: 18px;
+}
+
 @media (min-width: 640px) {
   .app-shell {
     padding: 36px 24px 48px;
@@ -417,7 +483,8 @@ dd,
   }
 
   .rest-actions,
-  .summary-actions {
+  .summary-actions,
+  .settings-actions {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }

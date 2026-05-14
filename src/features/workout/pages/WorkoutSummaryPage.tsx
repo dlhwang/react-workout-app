@@ -51,6 +51,10 @@ export function WorkoutSummaryPage({
             <dd>{formatTimer(totalRestSeconds)}</dd>
           </div>
           <div>
+            <dt>적용 휴식</dt>
+            <dd>{session.settingsSnapshot.globalRestSeconds}초</dd>
+          </div>
+          <div>
             <dt>운동 시작</dt>
             <dd>{session.startedAt ? formatDateTime(session.startedAt) : "-"}</dd>
           </div>

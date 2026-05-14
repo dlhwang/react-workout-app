@@ -88,12 +88,12 @@ export function getCurrentRestRemainingSeconds(
     return 0;
   }
 
-  const currentExercise = routine.exercises[session.currentExerciseIndex];
-  if (!currentExercise) {
+  const restSeconds = session.settingsSnapshot.globalRestSeconds;
+  if (!restSeconds) {
     return 0;
   }
 
-  return Math.max(0, currentExercise.restSeconds - getCurrentRestElapsedSeconds(session, now));
+  return Math.max(0, restSeconds - getCurrentRestElapsedSeconds(session, now));
 }
 
 export function getCurrentRestElapsedSeconds(session: WorkoutSession | null, now = new Date()) {

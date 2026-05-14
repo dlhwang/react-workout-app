@@ -1,4 +1,5 @@
 import type { CompletedSet, WorkoutRoutine, WorkoutSession } from "./workoutTypes";
+import type { WorkoutSettings } from "../settings/workoutSettings";
 import { getCurrentExercise, getNextStep } from "./workoutSessionCalculations";
 
 function secondsBetween(start: string, end: string) {
@@ -13,10 +14,15 @@ function shiftIso(value: string | undefined, seconds: number) {
   return new Date(new Date(value).getTime() + seconds * 1000).toISOString();
 }
 
-export function createInitialSession(routine: WorkoutRoutine, nowIso: string): WorkoutSession {
+export function createInitialSession(
+  routine: WorkoutRoutine,
+  settingsSnapshot: WorkoutSettings,
+  nowIso: string,
+): WorkoutSession {
   return {
     routineId: routine.id,
     routineName: routine.name,
+    settingsSnapshot,
     currentExerciseIndex: 0,
     currentSet: 1,
     status: "exercising",
@@ -33,6 +39,7 @@ export function completeCurrentSetTransition(
   nowIso: string,
 ) {
   const currentExercise = getCurrentExercise(routine, session);
+  const plannedRestSeconds = session.settingsSnapshot.globalRestSeconds;
   const completedSet: CompletedSet = {
     exerciseId: currentExercise.id,
     exerciseName: currentExercise.name,
@@ -40,7 +47,7 @@ export function completeCurrentSetTransition(
     startedAt: session.currentSetStartedAt ?? nowIso,
     completedAt: nowIso,
     durationSeconds: secondsBetween(session.currentSetStartedAt ?? nowIso, nowIso),
-    plannedRestSeconds: currentExercise.restSeconds,
+    plannedRestSeconds,
   };
 
   const completedSets = [...session.completedSets, completedSet];

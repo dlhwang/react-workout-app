@@ -35,8 +35,8 @@ export function CurrentExercisePanel({ exercise, session, now }: CurrentExercise
           <strong>{exercise.reps}회</strong>
         </div>
         <div>
-          <span>예정 휴식</span>
-          <strong>{formatTimer(exercise.restSeconds)}</strong>
+          <span>적용 휴식</span>
+          <strong>{session.settingsSnapshot.globalRestSeconds}초</strong>
         </div>
       </div>
 

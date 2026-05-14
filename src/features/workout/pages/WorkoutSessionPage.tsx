@@ -5,16 +5,18 @@ import {
 } from "../model/workoutSessionCalculations";
 import type { WorkoutRoutine } from "../model/workoutTypes";
 import { formatTimer } from "../../../shared/utils/timeFormat";
-import { CurrentExercisePanel } from "./CurrentExercisePanel";
-import { RestTimerPanel } from "./RestTimerPanel";
-import { WorkoutProgress } from "./WorkoutProgress";
+import { CurrentExercisePanel } from "../components/CurrentExercisePanel";
+import { PrimaryWorkoutButton } from "../components/PrimaryWorkoutButton";
+import { RestTimerPanel } from "../components/RestTimerPanel";
+import { WorkoutProgress } from "../components/WorkoutProgress";
 
 type WorkoutSessionPageProps = {
   routine: WorkoutRoutine;
   runner: ReturnType<typeof useWorkoutSession>;
+  onExit: () => void;
 };
 
-export function WorkoutSessionPage({ routine, runner }: WorkoutSessionPageProps) {
+export function WorkoutSessionPage({ routine, runner, onExit }: WorkoutSessionPageProps) {
   const { now, primaryAction, session } = runner;
 
   if (!session) {
@@ -34,6 +36,7 @@ export function WorkoutSessionPage({ routine, runner }: WorkoutSessionPageProps)
           <p className="eyebrow">{routine.name}</p>
           <h1>{session.status === "paused" ? "일시정지" : isRestView ? "휴식" : "운동 중"}</h1>
           <p className="session-time">전체 시간 {formatTimer(totalElapsed)}</p>
+          <p className="session-rest">적용 휴식: {session.settingsSnapshot.globalRestSeconds}초</p>
         </div>
         <div className="header-actions">
           {session.status !== "paused" ? (
@@ -41,7 +44,7 @@ export function WorkoutSessionPage({ routine, runner }: WorkoutSessionPageProps)
               일시정지
             </button>
           ) : null}
-          <button className="ghost-button" type="button" onClick={runner.reset}>
+          <button className="ghost-button" type="button" onClick={onExit}>
             종료
           </button>
         </div>
@@ -52,18 +55,10 @@ export function WorkoutSessionPage({ routine, runner }: WorkoutSessionPageProps)
       {isRestView ? (
         <RestTimerPanel routine={routine} session={session} now={now} />
       ) : (
-        <CurrentExercisePanel
-          exercise={currentExercise}
-          session={session}
-          now={now}
-        />
+        <CurrentExercisePanel exercise={currentExercise} session={session} now={now} />
       )}
 
-      <div className="bottom-action">
-        <button className="primary-button primary-button--large" type="button" onClick={primaryAction.action}>
-          {primaryAction.label}
-        </button>
-      </div>
+      <PrimaryWorkoutButton primaryAction={primaryAction} />
     </main>
   );
 }

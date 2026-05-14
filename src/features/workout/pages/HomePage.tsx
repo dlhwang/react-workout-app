@@ -1,21 +1,32 @@
 import type { WorkoutRoutine } from "../model/workoutTypes";
-import { RoutineCard } from "./RoutineCard";
+import { RoutineCard } from "../components/RoutineCard";
 
-type RoutineListPageProps = {
+type HomePageProps = {
   routines: WorkoutRoutine[];
   lastRoutineId: string | null;
+  onOpenSettings: () => void;
   onStartRoutine: (routine: WorkoutRoutine) => void;
 };
 
-export function RoutineListPage({ routines, lastRoutineId, onStartRoutine }: RoutineListPageProps) {
+export function HomePage({
+  routines,
+  lastRoutineId,
+  onOpenSettings,
+  onStartRoutine,
+}: HomePageProps) {
   return (
     <main className="app-shell">
       <header className="page-header">
-        <p className="eyebrow">Workout Runner</p>
-        <h1>오늘의 운동</h1>
+        <div>
+          <p className="eyebrow">Workout Runner</p>
+          <h1>운동 프로그램</h1>
+        </div>
+        <button className="ghost-button" type="button" onClick={onOpenSettings}>
+          설정
+        </button>
       </header>
 
-      <section className="routine-list" aria-label="운동 루틴 목록">
+      <section className="routine-list" aria-label="운동 프로그램 목록">
         {routines.map((routine) => (
           <RoutineCard
             key={routine.id}
