@@ -22,6 +22,10 @@ export function createInitialSession(
   return {
     routineId: routine.id,
     routineName: routine.name,
+    routineSnapshot: {
+      ...routine,
+      exercises: routine.exercises.map((exercise) => ({ ...exercise })),
+    },
     settingsSnapshot,
     currentExerciseIndex: 0,
     currentSet: 1,

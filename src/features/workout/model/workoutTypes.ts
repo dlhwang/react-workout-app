@@ -54,6 +54,7 @@ export type CompletedSet = {
 export type WorkoutSession = {
   routineId: string;
   routineName: string;
+  routineSnapshot?: WorkoutRoutine;
   settingsSnapshot: WorkoutSettings;
   currentExerciseIndex: number;
   currentSet: number;
